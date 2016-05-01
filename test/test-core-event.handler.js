@@ -12,15 +12,14 @@
         local: {
             name: 'event',
             handler: function (source, local, scope, context) {
-                if (!scope.event) {
-                    scope.event = event;
+                if (!scope._coreEvent) {
+                    scope._coreEvent = event;
                 }
-
                 if (local.name) {
                     if (!local.action) {
                         throw 'Event action is required (action:Function).';
                     }
-                    scope.event.on(local.name, local.action);
+                    scope._coreEvent.on(local.name, local.action);
                 }
             }
         }

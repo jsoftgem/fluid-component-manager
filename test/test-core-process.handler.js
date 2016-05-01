@@ -11,10 +11,10 @@
                 if (!local.event) {
                     throw 'Specifiy an event for this process';
                 }
-                if (!scope.event) {
+                if (!scope._coreEvent) {
                     throw 'No existing event for component core.';
                 }
-                scope.event.emit(local.event);
+                scope._coreEvent.emit(local.event);
             }
         }
     });

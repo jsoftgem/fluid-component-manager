@@ -7,19 +7,19 @@
 
     module.exports = fluidComponent.component('core', {
         handler: function (source, local, scope, context) {
-            if (!scope.handlers) {
-                scope.handlers = [];
+            if (!scope.$handlers) {
+                scope.$handlers = [];
             }
             if (source === 'handler') {
                 if (!local.name) {
                     throw 'Handler name is required.';
                 }
-                if (!!lodash.get(scope.handlers, local.name)) {
+                if (!!lodash.get(scope.$handlers, local.name)) {
                     throw 'Handler already exists.';
                 }
-                lodash.set(scope.handlers, local.name, local.handler);
+                lodash.set(scope.$handlers, local.name, local.handler);
             } else {
-                var handler = lodash.get(scope.handlers, source);
+                var handler = lodash.get(scope.$handlers, source);
                 if (!!handler) {
                     return handler(source, local, scope, context);
                 }
