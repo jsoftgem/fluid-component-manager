@@ -76,12 +76,9 @@
                 if (module instanceof Object) {
                     var modulePath = !!module.installed ? module.path : path.join(__dirname, module.path);
                     var component = require(modulePath);
-                    if (component instanceof FluidComponent) {
-                        storage.set(module.name, component);
-                        component.setComponentManager(ideComponentManager);
-                    } else {
-                        throw 'Unsupported module instance: ' + module + ' - must be a subclass of FluidComponent.';
-                    }
+                    storage.set(module.name, component);
+                    component.setComponentManager(ideComponentManager);
+
                 }
                 /*else {
 
