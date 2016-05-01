@@ -8,11 +8,12 @@
     var path = require('path');
     var lodash = require('lodash');
     var FluidComponent = require('fluid-component');
-    var Registry = require('npm-registry');
-    var npm = new Registry();
+    /*
+     var Registry = require('npm-registry');
+     var npm = new Registry();*/
 
 
-    function IdeComponentManager() {
+    function FluidComponentManager() {
 
         var ideComponentManager = this;
         var componentModules = [];
@@ -81,17 +82,18 @@
                     } else {
                         throw 'Unsupported module instance: ' + module + ' - must be a subclass of FluidComponent.';
                     }
-                } else {
-
-                    npm.packages.get(module, function (err, data) {
-                        if (err) {
-                            error(err);
-                        } else {
-                            //TODO: Download npm package
-                        }
-                    });
-
                 }
+                /*else {
+
+                 npm.packages.get(module, function (err, data) {
+                 if (err) {
+                 error(err);
+                 } else {
+                 //TODO: Download npm package
+                 }
+                 });
+
+                 }*/
             });
         }
 
@@ -130,6 +132,6 @@
     }
 
 
-    module.exports = IdeComponentManager;
+    module.exports = FluidComponentManager;
 
 })();
