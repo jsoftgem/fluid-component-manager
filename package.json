@@ -1,0 +1,23 @@
+{
+  "name": "fluid-component-manager",
+  "version": "0.1.0",
+  "description": "Manages and loads the components",
+  "main": "src/fluid-component-manager.js",
+  "scripts": {
+    "test": "./node_modules/.bin/mocha test --watch --recursive"
+  },
+  "author": "Jerico de Guzman",
+  "license": "MIT",
+  "dependencies": {
+    "download": "^4.4.3",
+    "dynamic-module-loader": "^1.0.8",
+    "fluid-component": "^0.1.5",
+    "hurt-locker": "^1.0.0",
+    "lodash": "^4.11.1",
+    "storage": "^0.2.0"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^2.4.5"
+  }
+}
