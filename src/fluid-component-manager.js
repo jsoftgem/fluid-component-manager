@@ -3,40 +3,33 @@
 
     var Storage = require('storage');
     var storage = new Storage();
-    var LockManager = require('hurt-locker').LockManager;
-    var DynamicModuleLoader = require('dynamic-module-loader').DynamicModuleLoader;
     var path = require('path');
     var lodash = require('lodash');
-    var FluidComponent = require('fluid-component');
-    /*
-     var Registry = require('npm-registry');
-     var npm = new Registry();*/
-
 
     function FluidComponentManager() {
 
         var ideComponentManager = this;
         var componentModules = [];
         var _local = {};
-        ideComponentManager.setNodeDir = setNodeDir;
-        ideComponentManager.getNodeDir = getNodeDir;
         ideComponentManager.get = get;
         ideComponentManager.addComponentModule = addComponentModule;
         ideComponentManager.loadComponents = loadComponents;
-        ideComponentManager.setNpmPath = setNpmPath;
-        ideComponentManager.getNpmPath = getNpmPath;
         ideComponentManager.getHandler = getHandler;
-        ideComponentManager.setHost = setHost;
-        ideComponentManager.getHost = getHost;
-        ideComponentManager.setLockDirPath = setLockDirPath;
-        ideComponentManager.getLockDirPath = getLockDirPath;
         ideComponentManager.handlers = {};
         return ideComponentManager;
 
-        function get(componentName) {
-            var component = storage.get(componentName);
-            resetFunctions(component);
-            return component;
+        function get(param) {
+            if (param instanceof Object) {
+                loadComponent(param);
+                var component = storage.get(param.name);
+                resetFunctions(component);
+                return component;
+            } else {
+                var component = storage.get(param);
+                resetFunctions(component);
+                return component;
+            }
+
         }
 
         function getHandler(componentName) {
@@ -62,70 +55,31 @@
         }
 
         function loadComponents(error) {
-            var lockManager = new LockManager({
-                lockDir: !!getLockDirPath() ? getLockDirPath() : './lock'
-            });
-            var dynamicModuleLoader = new DynamicModuleLoader({
-                moduleInstallationDir: path.normalize(!!getNodeDir() ? getNodeDir() : './node_modules'),
-                npmExecutablePath: getNpmPath(),
-                modulePackageServerUrl: getHost(),
-                lockManager: lockManager,
-                npmSkipInstall: true
-            });
-            lodash.forEach(componentModules, function (module) {
-                if (module instanceof Object) {
-                    var modulePath = !!module.installed ? module.path : path.join(__dirname, module.path);
-                    var component = require(modulePath);
-                    storage.set(module.name, component);
-                    component.setComponentManager(ideComponentManager);
-
+            try {
+                lodash.forEach(componentModules, function (module) {
+                    if (module instanceof Object) {
+                        loadComponent(module);
+                    } else {
+                        loadComponent({name: module, installed: true});
+                    }
+                });
+            } catch (err) {
+                if (error) {
+                    error(err);
                 }
-                /*else {
-
-                 npm.packages.get(module, function (err, data) {
-                 if (err) {
-                 error(err);
-                 } else {
-                 //TODO: Download npm package
-                 }
-                 });
-
-                 }*/
-            });
+            }
         }
 
-        function setNodeDir(nodeDir) {
-            _local.nodeDir = nodeDir;
-        }
+        function loadComponent(module) {
+            if (!module.name) {
+                throw 'Property name is required.';
+            }
+            var modulePath = !!module.installed ? module.path : path.join((module.dir ? module.dir : __dirname), module.path);
+            var component = require(modulePath);
+            component.setComponentManager(ideComponentManager);
+            storage.set(module.name, component);
 
-        function getNodeDir() {
-            return _local.nodeDir;
         }
-
-        function setNpmPath(npmPath) {
-            _local.npmPath = npmPath;
-        }
-
-        function getNpmPath() {
-            return _local.npmPath;
-        }
-
-        function setHost(host) {
-            _local.host = host;
-        }
-
-        function getHost() {
-            return _local.host;
-        }
-
-        function setLockDirPath(lockDirPath) {
-            _local.lockDirPath = lockDirPath;
-        }
-
-        function getLockDirPath() {
-            return _local.lockDirPath;
-        }
-
     }
 
 
