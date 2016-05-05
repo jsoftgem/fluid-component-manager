@@ -39,7 +39,7 @@
         function resetFunctions(component) {
             var keys = lodash.keys(component);
             lodash.forEach(keys, function (key) {
-                if ((!key.match(/execute|scope|setComponentManager|componentManager|name/g))) {
+                if ((!key.match(/execute|scope|setComponentManager|componentManager|name|target|spec|requires|runs/g))) {
                     lodash.unset(component, key);
                 }
             });
@@ -76,12 +76,39 @@
             }
             var modulePath = !!module.installed ? module.path : path.join((module.dir ? module.dir : __dirname), module.path);
             var component = require(modulePath);
+            if (component.requires) {
+                loadRequires(component.requires);
+            }
+            if (component.runs) {
+                runModules(component.runs);
+            }
             component.setComponentManager(ideComponentManager);
             storage.set(module.name, component);
 
         }
-    }
 
+        function loadRequires(requires) {
+            if (requires instanceof Array) {
+                lodash.forEach(require, function (req) {
+                    loadComponent(req);
+                });
+            } else {
+                loadComponent(requires);
+            }
+        }
+
+        function runModules(modules) {
+            if (modules instanceof Array) {
+                lodash.forEach(modules, function (module) {
+                    var component = get(module);
+                    if (!component) {
+                        throw 'Component ' + module + ' not loaded.';
+                    }
+                    component.execute();
+                });
+            }
+        }
+    }
 
     module.exports = FluidComponentManager;
 
