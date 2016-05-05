@@ -76,35 +76,65 @@
             }
             var modulePath = !!module.installed ? module.path : path.join((module.dir ? module.dir : __dirname), module.path);
             var component = require(modulePath);
+            component.setComponentManager(ideComponentManager);
+            storage.set(module.name, component);
             if (component.requires) {
                 loadRequires(component.requires);
             }
             if (component.runs) {
                 runModules(component.runs);
             }
-            component.setComponentManager(ideComponentManager);
-            storage.set(module.name, component);
-
         }
 
         function loadRequires(requires) {
             if (requires instanceof Array) {
-                lodash.forEach(require, function (req) {
-                    loadComponent(req);
+                lodash.forEach(requires, function (req) {
+                    if (req instanceof Object) {
+                        loadComponent(req);
+                    } else {
+                        loadComponent({name: req, installed: true});
+                    }
                 });
             } else {
-                loadComponent(requires);
+                if (requires instanceof Object) {
+                    loadComponent(requires);
+                } else {
+                    loadComponent({name: requires, installed: true});
+                }
+
             }
         }
 
         function runModules(modules) {
             if (modules instanceof Array) {
-                lodash.forEach(modules, function (module) {
-                    var component = get(module);
-                    if (!component) {
-                        throw 'Component ' + module + ' not loaded.';
+                runModule(modules)
+            } else {
+                var component = get(module);
+                if (!component) {
+                    throw 'Component ' + module + ' not loaded.';
+                }
+                component.execute();
+            }
+        }
+
+        function runModule(array, index) {
+            if (!index) {
+                index = 0;
+            }
+            if (index < array.length) {
+                var module = array[index];
+                console.log('run', module);
+                var component = get(module);
+                if (!component) {
+                    throw 'Component ' + module + ' not loaded.';
+                }
+                index++;
+                component.execute(function (err) {
+                    throw err;
+                }, {
+                    done: function () {
+                        runModule(array, index);
                     }
-                    component.execute();
                 });
             }
         }

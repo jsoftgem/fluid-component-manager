@@ -18,8 +18,16 @@
             });
 
             setTimeout(function () {
-                console.log(core);
-            }, 5000);
+                componentManager.get({
+                    name: 'save-process',
+                    path: '../test/test-core-process.js'
+                }).execute(function(err){}, {
+                    done: function(response){
+                        console.log(response);
+                        console.log(core);
+                    }
+                });
+            }, 1000);
 
         });
     });
