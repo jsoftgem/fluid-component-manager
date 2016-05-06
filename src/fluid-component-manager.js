@@ -10,12 +10,12 @@
 
         var ideComponentManager = this;
         var componentModules = [];
-        var _local = {};
+        var handlers = {};
         ideComponentManager.get = get;
         ideComponentManager.addComponentModule = addComponentModule;
         ideComponentManager.loadComponents = loadComponents;
-        ideComponentManager.getHandler = getHandler;
-        ideComponentManager.handlers = {};
+        ideComponentManager.execute = execute;
+        ideComponentManager.setHandler = setHandler;
         return ideComponentManager;
 
         function get(param) {
@@ -33,7 +33,7 @@
         }
 
         function getHandler(componentName) {
-            return ideComponentManager.handlers[componentName];
+            return handlers[componentName];
         }
 
         function resetFunctions(component) {
@@ -136,6 +136,46 @@
                         runModule(array, index);
                     }
                 });
+            }
+        }
+
+        function execute(error, name, context, options) {
+            setTimeout(function () {
+                try {
+                    var targetComponent = get(options.target);
+                    var handler = getHandler(options.target);
+                    if (!handler) {
+                        throw 'Execution failed. Missing handler function for component ' + options.target + '.';
+                    }
+                    if (targetComponent) {
+                        if (handler instanceof Function) {
+                            var returnValue = handler(name, options.local, targetComponent.scope, context);
+                            if (context && context.done) {
+                                context.done(returnValue);
+                            }
+                        } else if (handler instanceof String) {
+                            runPluginHandler(getHandler(handler), handler, name, context, options);
+                        }
+                    }
+                } catch (err) {
+                    if (error) {
+                        error(err);
+                    }
+                }
+            });
+        }
+
+        function runPluginHandler(pluginHandler, handler, name, context, options) {
+            if (pluginHandler instanceof Function) {
+                pluginHandler(name, options.local, targetComponent.scope, context);
+            } else {
+                throw handler + ' handler is not a function;';
+            }
+        }
+
+        function setHandler(name, handler) {
+            if (handler) {
+                lodash.set(handlers, name, handler);
             }
         }
     }
