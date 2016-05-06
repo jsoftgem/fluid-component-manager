@@ -80,7 +80,7 @@
                         lodash.unset(component, 'runs');
                     });
                 }
-            } 
+            }
         }
 
         function loadRequires(requires) {
@@ -156,7 +156,12 @@
                             }
                         } else {
                             var pluginHandler = getHandler(handler);
-                            runPluginHandler(pluginHandler.handler, handler, name, context, options, targetComponent.scope);
+                            if (pluginHandler.name === name) {
+                                runPluginHandler(pluginHandler.handler, handler, name, context, options, targetComponent.scope);
+                            } else {
+                                throw 'Handler ' + name + ' is not found in ' + target + '.';
+                            }
+
                         }
                     }
                 } catch (err) {

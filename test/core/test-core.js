@@ -28,7 +28,25 @@
             dir: __dirname
         }],
         runs: ['process-handler', 'event-handler', 'event-save'],
-        handler: 'plugin-handler'
+        handler: function (source, local, scope, context) {
+            if (!scope.$handlers) {
+                scope.$handlers = [];
+            }
+            if (source === 'handler') {
+                if (!local.name) {
+                    throw 'Handler name is required.';
+                }
+                if (!!lodash.get(scope.$handlers, local.name)) {
+                    throw 'Handler already exists.';
+                }
+                lodash.set(scope.$handlers, local.name, local.handler);
+            } else {
+                var handler = lodash.get(scope.$handlers, source);
+                if (!!handler) {
+                    return handler(source, local, scope, context);
+                }
+            }
+        }
     });
 
 })();
