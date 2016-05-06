@@ -15,18 +15,17 @@
         ideComponentManager.addComponentModule = addComponentModule;
         ideComponentManager.loadComponents = loadComponents;
         ideComponentManager.execute = execute;
-        ideComponentManager.setHandler = setHandler;
+        ideComponentManager.logHandlers = logHandlers;
         return ideComponentManager;
 
         function get(param) {
+            var component = {};
             if (param instanceof Object) {
                 loadComponent(param);
-                var component = storage.get(param.name);
-                resetFunctions(component);
+                lodash.assignIn(component, storage.get(param.name));
                 return component;
             } else {
-                var component = storage.get(param);
-                resetFunctions(component);
+                lodash.assignIn(component, storage.get(param));
                 return component;
             }
 
@@ -34,15 +33,6 @@
 
         function getHandler(componentName) {
             return handlers[componentName];
-        }
-
-        function resetFunctions(component) {
-            var keys = lodash.keys(component);
-            lodash.forEach(keys, function (key) {
-                if ((!key.match(/execute|scope|setComponentManager|componentManager|name|target|spec|requires|runs/g))) {
-                    lodash.unset(component, key);
-                }
-            });
         }
 
         function addComponentModule(module) {
@@ -71,19 +61,26 @@
         }
 
         function loadComponent(module) {
-            if (!module.name) {
-                throw 'Property name is required.';
-            }
-            var modulePath = !!module.installed ? module.path : path.join((module.dir ? module.dir : __dirname), module.path);
-            var component = require(modulePath);
-            component.setComponentManager(ideComponentManager);
-            storage.set(module.name, component);
-            if (component.requires) {
-                loadRequires(component.requires);
-            }
-            if (component.runs) {
-                runModules(component.runs);
-            }
+            if (!storage.get(module.name)) {
+                if (!module.name) {
+                    throw 'Property name is required.';
+                }
+                var modulePath = !!module.installed ? module.path : path.join((module.dir ? module.dir : __dirname), module.path);
+                var component = require(modulePath);
+                component.setComponentManager(ideComponentManager);
+                storage.set(module.name, component);
+                setHandler(module, component.name, component.__$);
+                lodash.unset(component, '__$');
+                if (component.requires) {
+                    loadRequires(component.requires);
+                    lodash.unset(component, 'requires');
+                }
+                if (component.runs) {
+                    runModules(component.runs, function () {
+                        lodash.unset(component, 'runs');
+                    });
+                }
+            } 
         }
 
         function loadRequires(requires) {
@@ -105,25 +102,26 @@
             }
         }
 
-        function runModules(modules) {
+        function runModules(modules, done) {
             if (modules instanceof Array) {
-                runModule(modules)
+                runModule(modules, undefined, done)
             } else {
                 var component = get(module);
                 if (!component) {
                     throw 'Component ' + module + ' not loaded.';
                 }
-                component.execute();
+                component.execute(function (err) {
+                    throw err;
+                }, {done: done});
             }
         }
 
-        function runModule(array, index) {
+        function runModule(array, index, done) {
             if (!index) {
                 index = 0;
             }
             if (index < array.length) {
                 var module = array[index];
-                console.log('run', module);
                 var component = get(module);
                 if (!component) {
                     throw 'Component ' + module + ' not loaded.';
@@ -133,9 +131,11 @@
                     throw err;
                 }, {
                     done: function () {
-                        runModule(array, index);
+                        runModule(array, index, done);
                     }
                 });
+            } else {
+                done();
             }
         }
 
@@ -143,9 +143,10 @@
             setTimeout(function () {
                 try {
                     var targetComponent = get(options.target);
-                    var handler = getHandler(options.target);
+                    var handler = getHandler(options.target).handler;
+                    var target = options.target;
                     if (!handler) {
-                        throw 'Execution failed. Missing handler function for component ' + options.target + '.';
+                        throw 'Execution failed. Missing handler function for component ' + target + '.';
                     }
                     if (targetComponent) {
                         if (handler instanceof Function) {
@@ -153,11 +154,13 @@
                             if (context && context.done) {
                                 context.done(returnValue);
                             }
-                        } else if (handler instanceof String) {
-                            runPluginHandler(getHandler(handler), handler, name, context, options);
+                        } else {
+                            var pluginHandler = getHandler(handler);
+                            runPluginHandler(pluginHandler.handler, handler, name, context, options, targetComponent.scope);
                         }
                     }
                 } catch (err) {
+                    console.log(err);
                     if (error) {
                         error(err);
                     }
@@ -165,18 +168,25 @@
             });
         }
 
-        function runPluginHandler(pluginHandler, handler, name, context, options) {
+        function runPluginHandler(pluginHandler, handler, name, context, options, scope) {
             if (pluginHandler instanceof Function) {
-                pluginHandler(name, options.local, targetComponent.scope, context);
+                var returnValue = pluginHandler(name, options.local, scope, context);
+                if (context && context.done) {
+                    context.done(returnValue);
+                }
             } else {
                 throw handler + ' handler is not a function;';
             }
         }
 
-        function setHandler(name, handler) {
+        function setHandler(module, name, handler) {
             if (handler) {
-                lodash.set(handlers, name, handler);
+                lodash.set(handlers, module.name, {handler: handler, name: name});
             }
+        }
+
+        function logHandlers() {
+            console.log('handlers', handlers);
         }
     }
 
