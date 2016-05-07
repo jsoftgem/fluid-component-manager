@@ -22,10 +22,6 @@
             name: 'process-save',
             path: 'test-core-process.js',
             dir: __dirname
-        }, {
-            name: 'plugin-handler',
-            path: 'test-core-plugin.handler.js',
-            dir: __dirname
         }],
         runs: ['process-handler', 'event-handler', 'event-save'],
         handler: function (source, local, scope, context) {

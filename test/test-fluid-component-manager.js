@@ -6,7 +6,7 @@
     var componentManager;
     var core;
 
-    describe('Core runner', function () {
+    describe('FluidComponentManager basic usage', function () {
         beforeEach(function () {
             componentManager = new FluidComponentManager();
             core = componentManager.get({
@@ -25,14 +25,59 @@
             var newCore = componentManager.get('core');
             expect(newCore.bad).to.not.defined;
         });
-        
+
         it('should maintain scope data of component even when componentManager.get is called', function () {
             core.scope.good = 'good way to share data';
             var newCore = componentManager.get('core');
             expect(newCore.scope.good).to.be.defined;
         });
+    });
 
+    describe('FluidComponentManager advanced usage with one plugin handler', function () {
+        beforeEach(function () {
+            componentManager = new FluidComponentManager();
+            core = componentManager.get({
+                name: 'core2',
+                path: '/core-with-plugin-handler/test-core.js',
+                dir: __dirname
+            });
+        });
 
+        it('should be able to use handler from other FluidComponent', function () {
+            var coreRunner = componentManager.get({
+                name: 'runner',
+                path: '/core-with-plugin-handler/test-core-runner.js',
+                dir: __dirname
+            });
+            coreRunner.execute(function (err) {
+                console.log(err);
+            }, {
+                done: function () {
+                    var core2 = componentManager.get('core2');
+                    expect(core2.scope.hello).to.be.equal('hello');
+                }
+            });
+        });
+    });
+    describe('FluidComponentManager advanced usage with multiple plugin handlers', function () {
+        beforeEach(function () {
+            componentManager = new FluidComponentManager();
+            core = componentManager.get({
+                name: 'core3',
+                path: '/core-with-plugin-handlers/test-core.js',
+                dir: __dirname
+            });
+        });
+
+        it('should be able to use handlers from other FluidComponent', function () {
+           var saveProcessor = componentManager.get('save-process');
+            saveProcessor.execute(function(err){},{
+                done: function(){
+                    var core3 = componentManager.get('core3');
+                    expect(core3.scope.saved).to.equal(true);
+                }
+            });
+        });
     });
 
 })();

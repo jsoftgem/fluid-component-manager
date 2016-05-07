@@ -154,14 +154,20 @@
                             if (context && context.done) {
                                 context.done(returnValue);
                             }
-                        } else {
-                            var pluginHandler = getHandler(handler);
-                            if (pluginHandler.name === name) {
-                                runPluginHandler(pluginHandler.handler, handler, name, context, options, targetComponent.scope);
-                            } else {
+                        } else if (handler instanceof Array) {
+                            var pluginHandler;
+                            var foundHandler = lodash.find(handler, function (hdlr) {
+                                var hdl = getHandler(hdlr);
+                                return !!hdl && hdl.name === name;
+                            });
+                            if (!foundHandler) {
                                 throw 'Handler ' + name + ' is not found in ' + target + '.';
                             }
-
+                            pluginHandler = getHandler(foundHandler);
+                            runPluginHandler(pluginHandler.handler, handler, name, context, options, targetComponent.scope);
+                        } else {
+                            var pluginHandler = getHandler(handler);
+                            runPluginHandler(pluginHandler.handler, handler, name, context, options, targetComponent.scope);
                         }
                     }
                 } catch (err) {
