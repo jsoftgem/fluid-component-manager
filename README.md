@@ -1,6 +1,6 @@
 # fluid-component-manager
 
-  Manages and loads fluid-component/s to application.
+  Manages and loads [fluid-component/s](https://github.com/jsoftgem/fluid-component) to application.
 
 [![NPM](https://nodei.co/npm/fluid-component-manager.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/fluid-component-manager?downloads=true&downloadRank=true&stars=true)
 
