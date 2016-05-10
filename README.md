@@ -2,6 +2,8 @@
 
   Manages and loads fluid-component/s to application.
 
+[![NPM](https://nodei.co/npm/fluid-component-manager.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/fluid-component-manager?downloads=true&downloadRank=true&stars=true)
+
 # Installation
 ` npm install fluid-component-manager --save`
 
