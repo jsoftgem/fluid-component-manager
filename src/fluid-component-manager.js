@@ -139,7 +139,7 @@
             }
         }
 
-        function execute(error, name, context, options) {
+        function execute(name, scope, context, options, callback) {
             setTimeout(function () {
                 try {
                     var targetComponent = get(options.target);
@@ -150,12 +150,9 @@
                     }
                     if (targetComponent) {
                         if (handler instanceof Function) {
-                            var returnValue = handler(name, options.local, targetComponent.scope, context);
-                            if (context && context.done) {
-                                context.done(returnValue);
-                            }
+                            var returnValue = handler(name, options.local, scope, context);
+                            callback(undefined, returnValue);
                         } else if (handler instanceof Array) {
-                            var pluginHandler;
                             var foundHandler = lodash.find(handler, function (hdlr) {
                                 var hdl = getHandler(hdlr);
                                 return !!hdl && hdl.name === name;
@@ -163,28 +160,23 @@
                             if (!foundHandler) {
                                 throw 'Handler ' + name + ' is not found in ' + target + '.';
                             }
-                            pluginHandler = getHandler(foundHandler);
-                            runPluginHandler(pluginHandler.handler, handler, name, context, options, targetComponent.scope);
+                            runPluginHandler(getHandler(foundHandler).handler, handler, name, context, options, scope, callback);
                         } else {
-                            var pluginHandler = getHandler(handler);
-                            runPluginHandler(pluginHandler.handler, handler, name, context, options, targetComponent.scope);
+                            runPluginHandler(getHandler(handler).handler, handler, name, context, options, scope, callback);
                         }
                     }
                 } catch (err) {
-                    console.log(err);
-                    if (error) {
-                        error(err);
+                    if (callback) {
+                        callback(err);
                     }
                 }
             });
         }
 
-        function runPluginHandler(pluginHandler, handler, name, context, options, scope) {
+        function runPluginHandler(pluginHandler, handler, name, context, options, scope, callback) {
             if (pluginHandler instanceof Function) {
                 var returnValue = pluginHandler(name, options.local, scope, context);
-                if (context && context.done) {
-                    context.done(returnValue);
-                }
+                callback(undefined, returnValue);
             } else {
                 throw handler + ' handler is not a function;';
             }

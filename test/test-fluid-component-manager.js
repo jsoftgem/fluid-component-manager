@@ -3,6 +3,7 @@
     var chai = require('chai');
     var expect = chai.expect;
     var FluidComponentManager = require('../src/fluid-component-manager.js');
+    var FluidComponent = require('fluid-component');
     var componentManager;
     var core;
 
@@ -27,9 +28,18 @@
         });
 
         it('should maintain scope data of component even when componentManager.get is called', function () {
-            core.scope.good = 'good way to share data';
-            var newCore = componentManager.get('core');
-            expect(newCore.scope.good).to.be.defined;
+            var fluidComponent = new FluidComponent();
+            var dataComp = fluidComponent.component('data', {
+                target: 'core',
+                local: {
+                    name: 'sample',
+                    value: 'The secure way to share data. :)'
+                }
+            });
+            dataComp.setComponentManager(componentManager);
+            dataComp.execute(function (err, data) {
+                expect(err).to.be.undefined;
+            });
         });
     });
 
@@ -70,9 +80,10 @@
         });
 
         it('should be able to use handlers from other FluidComponent', function () {
-           var saveProcessor = componentManager.get('save-process');
-            saveProcessor.execute(function(err){},{
-                done: function(){
+            var saveProcessor = componentManager.get('save-process');
+            saveProcessor.execute(function (err) {
+            }, {
+                done: function () {
                     var core3 = componentManager.get('core3');
                     expect(core3.scope.saved).to.equal(true);
                 }

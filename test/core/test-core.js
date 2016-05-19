@@ -22,8 +22,12 @@
             name: 'process-save',
             path: 'test-core-process.js',
             dir: __dirname
+        }, {
+            name: 'data-handler',
+            path: 'test-data.handler.js',
+            dir: __dirname
         }],
-        runs: ['process-handler', 'event-handler', 'event-save'],
+        runs: ['process-handler', 'event-handler', 'event-save', 'data-handler'],
         handler: function (source, local, scope, context) {
             if (!scope.$handlers) {
                 scope.$handlers = [];
