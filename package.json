@@ -1,6 +1,6 @@
 {
   "name": "fluid-component-manager",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Manages and loads the components",
   "main": "src/fluid-component-manager.js",
   "scripts": {
