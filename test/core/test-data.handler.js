@@ -9,8 +9,6 @@
             name: 'data',
             handler: function (source, local, scope) {
                 lodash.set(scope, local.name, local.value);
-                console.log('local', local);
-                console.log('core.scope', scope);
                 return lodash.get(scope, local.name);
             }
         }

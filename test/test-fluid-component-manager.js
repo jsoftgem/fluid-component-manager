@@ -29,15 +29,14 @@
 
         it('should maintain scope data of component even when componentManager.get is called', function () {
             var fluidComponent = new FluidComponent();
-            var dataComp = fluidComponent.component('data', {
+            fluidComponent.execute({
+                name: 'data',
                 target: 'core',
                 local: {
                     name: 'sample',
                     value: 'The secure way to share data. :)'
                 }
-            });
-            dataComp.setComponentManager(componentManager);
-            dataComp.execute(function (err, data) {
+            }, componentManager, function (err, data) {
                 expect(err).to.be.undefined;
             });
         });
@@ -60,7 +59,6 @@
                 dir: __dirname
             });
             coreRunner.execute(function (err) {
-                console.log(err);
             }, {
                 done: function () {
                     var core2 = componentManager.get('core2');
