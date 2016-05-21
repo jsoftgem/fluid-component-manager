@@ -1,16 +1,16 @@
-(function () {
+(function() {
     'use strict';
 
     var Storage = require('storage');
     var storage = new Storage();
     var path = require('path');
     var lodash = require('lodash');
+    var componentModules = [];
+    var handlers = {};
 
     function FluidComponentManager() {
 
         var ideComponentManager = this;
-        var componentModules = [];
-        var handlers = {};
         ideComponentManager.get = get;
         ideComponentManager.addComponentModule = addComponentModule;
         ideComponentManager.loadComponents = loadComponents;
@@ -46,11 +46,14 @@
 
         function loadComponents(error) {
             try {
-                lodash.forEach(componentModules, function (module) {
+                lodash.forEach(componentModules, function(module) {
                     if (module instanceof Object) {
                         loadComponent(module);
                     } else {
-                        loadComponent({name: module, installed: true});
+                        loadComponent({
+                            name: module,
+                            installed: true
+                        });
                     }
                 });
             } catch (err) {
@@ -76,7 +79,7 @@
                     lodash.unset(component, 'requires');
                 }
                 if (component.runs) {
-                    runModules(component.runs, function () {
+                    runModules(component.runs, function() {
                         lodash.unset(component, 'runs');
                     });
                 }
@@ -85,18 +88,24 @@
 
         function loadRequires(requires) {
             if (requires instanceof Array) {
-                lodash.forEach(requires, function (req) {
+                lodash.forEach(requires, function(req) {
                     if (req instanceof Object) {
                         loadComponent(req);
                     } else {
-                        loadComponent({name: req, installed: true});
+                        loadComponent({
+                            name: req,
+                            installed: true
+                        });
                     }
                 });
             } else {
                 if (requires instanceof Object) {
                     loadComponent(requires);
                 } else {
-                    loadComponent({name: requires, installed: true});
+                    loadComponent({
+                        name: requires,
+                        installed: true
+                    });
                 }
 
             }
@@ -110,9 +119,11 @@
                 if (!component) {
                     throw 'Component ' + module + ' not loaded.';
                 }
-                component.execute(function (err) {
+                component.execute(function(err) {
                     throw err;
-                }, {done: done});
+                }, {
+                    done: done
+                });
             }
         }
 
@@ -127,10 +138,10 @@
                     throw 'Component ' + module + ' not loaded.';
                 }
                 index++;
-                component.execute(function (err) {
+                component.execute(function(err) {
                     throw err;
                 }, {
-                    done: function () {
+                    done: function() {
                         runModule(array, index, done);
                     }
                 });
@@ -140,7 +151,7 @@
         }
 
         function execute(name, scope, context, options, callback) {
-            setTimeout(function () {
+            setTimeout(function() {
                 try {
                     var targetComponent = get(options.target);
                     var handler = getHandler(options.target).handler;
@@ -153,7 +164,7 @@
                             var returnValue = handler(name, options.local, scope, context);
                             callback(undefined, returnValue);
                         } else if (handler instanceof Array) {
-                            var foundHandler = lodash.find(handler, function (hdlr) {
+                            var foundHandler = lodash.find(handler, function(hdlr) {
                                 var hdl = getHandler(hdlr);
                                 return !!hdl && hdl.name === name;
                             });
@@ -184,7 +195,10 @@
 
         function setHandler(module, name, handler) {
             if (handler) {
-                lodash.set(handlers, module.name, {handler: handler, name: name});
+                lodash.set(handlers, module.name, {
+                    handler: handler,
+                    name: name
+                });
             }
         }
 
