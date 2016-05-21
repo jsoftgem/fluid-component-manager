@@ -1,6 +1,6 @@
 {
   "name": "fluid-component-manager",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Manages and loads the components",
   "main": "src/fluid-component-manager.js",
   "scripts": {
@@ -15,7 +15,7 @@
   "author": "Jerico de Guzman",
   "license": "MIT",
   "dependencies": {
-    "fluid-component": "^0.1.20",
+    "fluid-component": "^0.1.21",
     "lodash": "^4.11.1",
     "storage": "^0.2.0"
   },

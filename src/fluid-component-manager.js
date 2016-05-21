@@ -7,6 +7,7 @@
     var lodash = require('lodash');
     var componentModules = [];
     var handlers = {};
+    var scopes = {};
 
     function FluidComponentManager() {
 
@@ -28,7 +29,6 @@
                 lodash.assignIn(component, storage.get(param));
                 return component;
             }
-
         }
 
         function getHandler(componentName) {
@@ -74,6 +74,8 @@
                 storage.set(module.name, component);
                 setHandler(module, component.name, component.__$);
                 lodash.unset(component, '__$');
+                setScope(module.name, component.__$scope);
+                lodash.unset(component, '__$scope');
                 if (component.requires) {
                     loadRequires(component.requires);
                     lodash.unset(component, 'requires');
@@ -150,11 +152,12 @@
             }
         }
 
-        function execute(name, scope, context, options, callback) {
+        function execute(name, context, options, callback) {
             setTimeout(function() {
                 try {
                     var targetComponent = get(options.target);
                     var handler = getHandler(options.target).handler;
+                    var scope = getScope(options.target);
                     var target = options.target;
                     if (!handler) {
                         throw 'Execution failed. Missing handler function for component ' + target + '.';
@@ -162,7 +165,15 @@
                     if (targetComponent) {
                         if (handler instanceof Function) {
                             var returnValue = handler(name, options.local, scope, context);
-                            callback(undefined, returnValue);
+                            if (returnValue && returnValue.then) {
+                                returnValue.then(function(fulfilledValue) {
+                                    callback(undefined, fulfilledValue);
+                                }, function(err) {
+                                    callback(err);
+                                });
+                            } else {
+                                callback(undefined, returnValue);
+                            }
                         } else if (handler instanceof Array) {
                             var foundHandler = lodash.find(handler, function(hdlr) {
                                 var hdl = getHandler(hdlr);
@@ -187,7 +198,16 @@
         function runPluginHandler(pluginHandler, handler, name, context, options, scope, callback) {
             if (pluginHandler instanceof Function) {
                 var returnValue = pluginHandler(name, options.local, scope, context);
-                callback(undefined, returnValue);
+                if (returnValue && returnValue.then) {
+                    returnValue.then(function(fulfilledValue) {
+                        callback(undefined, fulfilledValue);
+                    }, function(err) {
+                        callback(err);
+                    });
+                } else {
+                    callback(undefined, returnValue);
+                }
+
             } else {
                 throw handler + ' handler is not a function;';
             }
@@ -200,6 +220,14 @@
                     name: name
                 });
             }
+        }
+
+        function setScope(module, scope) {
+            lodash.set(scopes, module, scope);
+        }
+
+        function getScope(module) {
+            return lodash.get(scopes, module);
         }
 
         function logHandlers() {
